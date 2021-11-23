@@ -1,0 +1,51 @@
+﻿@using ResourcePlanning.Models
+@model LoginViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutIdentity.cshtml";
+    ViewData["Title"] = "Log in";
+    ViewData["AppName"] = "Resource Planning";
+}
+
+<div class="identity">
+    <div class="icon-container">
+        <i class="fad fa-hard-hat theme-pepper"></i>
+    </div>
+    <header class="identity__header">
+        <h1>@ViewData["AppName"]</h1>
+    </header>
+    <section class="identity__section">
+        <p>To continue, log in to @ViewData["AppName"].</p>
+        <form id="account" asp-area="Account" asp-controller="Home" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" role="form">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" autocomplete="username" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" autocomplete="pepper-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label asp-for="RememberMe">
+                        <input asp-for="RememberMe" />
+                        @Html.DisplayNameFor(m => m.RememberMe)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <button id="login-button" type="submit" class="btn btn-primary">Log in</button>
+            </div>
+        </form>
+        <hr />
+        <div class="pepper-info">
+            <img src="~/img/pepper_tt.svg" />
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

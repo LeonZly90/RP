@@ -1,0 +1,75 @@
+﻿@{
+    ViewData["Title"] = "Manage Exception Start/End Date";
+    string page = "User";
+}
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Resource Planning Tool</h1>
+    @Html.Partial("_NavPartial", page)
+</div>
+@* GRID *@
+<div>
+    @(Html.Kendo().Grid<GridUserViewModel>()
+            .Name("UserGrid")
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                .Read(read => read.Action("Users_Read", "User"))
+                .Update(update => update.Action("Users_Update", "User"))
+                .Create(create => create.Action("Users_Create", "User"))
+                .Destroy(destroy => destroy.Action("Users_Destroy", "User"))
+                .Events(ev => ev.Error("onError"))
+                .PageSize(200)
+                .Model(model =>
+                {
+                    model.Id(u => u.Id);
+                    model.Field(u => u.Email);
+                    model.Field(u => u.FirstName).Editable(false);
+                    model.Field(u => u.LastName).Editable(false);
+                    model.Field(u => u.RoleId).DefaultValue(SD.Role_Viewer_Id);
+                })
+            )
+            .Columns(columns =>
+            {
+                columns.Bound(c => c.Email).Title("Email").Width(500);
+                columns.Bound(c => c.FirstName).Title("First Name").Width(200);
+                columns.Bound(c => c.LastName).Width(150);
+                columns.ForeignKey(h => h.RoleId, (IEnumerable)ViewData["roles"], "RoleId", "RoleName").Title("Role");
+                columns.Command(command => command.Destroy());
+
+            })
+            .ToolBar(toolbar => {
+                toolbar.Search();
+                toolbar.Save();
+                toolbar.Create();
+            })
+        .Editable(editable =>
+        {
+            editable.Mode(GridEditMode.InCell);
+            editable.DisplayDeleteConfirmation(false);
+        })
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable()
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    .Scrollable()
+    .Height(800)
+    .Search(search =>
+    {
+        search.Field(f => f.Email);
+        search.Field(f => f.FirstName);
+        search.Field(f => f.LastName);
+
+    })
+    )
+</div>
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+</script>

@@ -1,0 +1,549 @@
+﻿JobNumber: @ViewData["_JobNumber"]
+<br />
+Employee: @ViewData["_EmpNumber"]
+<br />
+
+@{
+    ViewData["Title"] = "Manage Exception Start/End Date";
+    string page = "ManageException";
+}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Resource Planning Tool</h1>
+    @Html.Partial("_NavPartial", page)
+</div>
+@* GRID *@
+<div id="grid">
+    @(Html.Kendo().Grid<ProjectUser>()
+
+    .Name("Grid")
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Read(read => read.Action("Project_Read", "Project"))
+    .Update(update => update.Action("Project_Update", "Project"))
+    .Events(ev => ev.Error("onError"))
+    .PageSize(5)
+    .Model(model =>
+    {
+        model.Id(h => h.EmployeeNumber + h.JobNumber);
+        model.Field(u => u.JobNumber).Editable(false);
+        model.Field(u => u.JobName).Editable(false);
+        model.Field(u => u.Employee).Editable(false);
+    })
+    )
+    .Columns(columns =>
+    {
+        columns.Bound(c => c.JobNumber).Title("Job #").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(c => c.JobName).Filterable(ftb => ftb.Multi(true).Search(true)).Width(150);
+        columns.Bound(c => c.Employee).Filterable(ftb => ftb.Multi(true).Search(true)).Width(110);
+        columns.Bound(c => c.JobStart).Filterable(ftb => ftb.Multi(true).Search(true))
+        .ClientTemplate(
+        "# if (HasException == 'Y') { #" +
+        "<span class='btn btn-outline-success'> #=kendo.toString(JobStart, 'MM/dd/yyyy') #</span>" +
+        "# } else { #" +
+        "<span class='btn btn-link'> #=kendo.toString(JobStart, 'MM/dd/yyyy') #</span>" +
+        "# } #"
+        )
+        .Width(150);
+
+        columns.Bound(c => c.JobEnd).Filterable(ftb => ftb.Multi(true).Search(true))
+        .ClientTemplate(
+        "# if (HasException == 'Y') { #" +
+        "<span class='btn btn-outline-success'> #=kendo.toString(JobEnd, 'MM/dd/yyyy') #</span>" +
+        "# } else { #" +
+        "<span class='btn btn-link'> #=kendo.toString(JobEnd, 'MM/dd/yyyy') #</span>" +
+        "# } #"
+        )
+        .Width(150);
+
+
+    })
+    .ToolBar(toolbar => {
+        toolbar.Search();
+        toolbar.Save();
+    })
+
+    .Editable(editable =>
+    {
+        editable.Mode(GridEditMode.InCell);
+    })
+
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable(sortable => sortable
+    .AllowUnsort(true)
+    .SortMode(GridSortMode.MultipleColumn)
+    .ShowIndexes(true))
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    .Scrollable()
+    .Height(800)
+    .ToolBar(tools => tools.Excel())
+    .Excel(excel => excel
+    .AllPages(true)
+    .FileName("Resource Planning.xlsx")
+    .Filterable(true)
+    .ProxyURL(Url.Action("Excel_Export_Save", "Grid"))
+    )
+
+    .ToolBar(tools => tools.Pdf())
+    .Pdf(pdf => pdf
+    .AllPages()
+    .AvoidLinks()
+    .PaperSize("A3")
+    .Scale(0.8)
+    .Margin("2cm", "1cm", "1cm", "1cm")
+    .Landscape()
+    .RepeatHeaders()
+    .TemplateId("page-template")
+    .FileName("Resource Planning.pdf")
+    .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+    )
+
+
+    .Search(search =>
+    {
+        search.Field(f => f.JobNumber);
+        search.Field(f => f.JobName);
+        search.Field(f => f.Employee);
+    })
+    )
+</div>
+
+<div class="demo-section k-content wide">
+    @(Html.Kendo().Chart<ProjectUser>()
+        .Name("chart")
+        .Title("Spain electricity production (GWh)")
+        .Legend(legend => legend
+            .Position(ChartLegendPosition.Top)
+        )
+        .DataSource(ds => ds.Read(read => read.Action("test", "Home")))
+        .Series(series => {
+            series.Column(model => model.JobStart).CategoryField("Month");
+            series.Column(model => model.JobEnd).CategoryField("Month");
+            //series.Column(model => model.Employee).Name("Wind").CategoryField("Year");
+        })
+        .CategoryAxis(axis => axis
+            .Labels(labels => labels.Rotation(-90))
+            .MajorGridLines(lines => lines.Visible(false))
+        )
+        .ValueAxis(axis => axis.Numeric()
+            .Labels(labels => labels.Format("{0:N0}"))
+            .MajorUnit(10000)
+            .Line(line => line.Visible(false))
+        )
+        .Tooltip(tooltip => tooltip
+            .Visible(true)
+            .Format("{0:N0}")
+        )
+    )
+</div>
+<div class="demo-section k-content wide">
+    @(Html.Kendo().Chart<ProjectUser>()
+        .Name("chart")
+        .Title("Transfer speed Mbit/s")
+        .Legend(legend => legend
+            .Position(ChartLegendPosition.Top)
+        )
+        .DataSource(ds => ds.Read(read => read.Action("_DownloadSpeeds", "Range_Bar_Charts")))
+        .Series(series => {
+            series.RangeColumn(model => model.JobStart, model => model.JobEnd).Name("WiFi").CategoryField("Day");
+            //series.RangeColumn(model => model.OpticalFrom, model => model.OpticalTo).Name("Optical").CategoryField("Day");
+        })
+        .Tooltip(tooltip => tooltip
+            .Visible(true)
+            .Template("#= value.from # - #= value.to #")
+        )
+    )
+</div>
+<script>
+    // Send the dates for the newly creted/updated tasks as UTC strings
+    function onUpdateCreate(e) {
+        e.End = e.End.toISOString();
+        e.Start = e.Start.toISOString();
+    }
+</script>
+
+
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+</script>
+
+<style>
+
+    #grid .k-grid-header .k-header {
+        font-weight: bold;
+        white-space: normal;
+    }
+
+    .btn-outline-success {
+        /*        color: #28a745;
+        border-color: #28a745;*/
+        cursor: pointer;
+    }
+
+    .btn-link {
+        cursor: pointer;
+    }
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="styles/kendo.default.min.css" />
+    <link rel="stylesheet" href="styles/kendo.default.mobile.min.css" />
+
+    <script src="js/jquery.min.js"></script>
+
+
+    <script src="js/kendo.all.min.js"></script>
+
+
+
+</head>
+<body>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+    <div id="example">
+        <div id="grid"></div>
+        <script>
+            $(document).ready(function () {
+                var crudServiceBaseUrl = "/Admin/Note/Index",
+                    dataSource = new kendo.data.DataSource({
+                        transport: {
+                            read: {
+                                url: crudServiceBaseUrl + "/NoteController/Project_Read",
+                                dataType: "jsonp"
+                            },
+                            //update: {
+                            //    url: crudServiceBaseUrl + "/detailproducts/Update",
+                            //    dataType: "jsonp"
+                            //},
+                            //destroy: {
+                            //    url: crudServiceBaseUrl + "/detailproducts/Destroy",
+                            //    dataType: "jsonp"
+                            //},
+                            parameterMap: function (options, operation) {
+                                if (operation !== "read" && options.models) {
+                                    return { models: kendo.stringify(options.models) };
+                                }
+                            }
+                        },
+                        batch: true,
+                        pageSize: 20,
+                        autoSync: true,
+
+                        schema: {
+                            model: {
+                                //id: "ProductID",
+                                fields: {
+                                    EmpNo: { editable: false },
+                                    CompCode: { editable: false },
+                                    JobCode: { editable: false },
+                                    JobName: { editable: false },
+                                    EmpFirstName: { editable: false },
+                                    EmpLastName: { editable: false },
+                                    Note: { editable: true },
+                                    NoteDate: { editable: false }
+
+                                }
+                            }
+                        }
+                    });
+
+                $("#grid").kendoGrid({
+                    dataSource: dataSource,
+                    columnMenu: {
+                        filterable: false
+                    },
+                    height: 680,
+                    editable: "popup",
+                    pageable: true,
+                    sortable: true,
+                    navigatable: true,
+                    resizable: true,
+                    reorderable: true,
+                    groupable: true,
+                    filterable: true,
+                    dataBound: onDataBound,
+                    toolbar: ["excel", "pdf", "search"],
+                    columns: [
+                        {
+                            field: "EmpNo",
+                            title: "EmpNo",
+                            //template: "<div class='product-photo' style='background-image: url(../content/web/foods/#:data.ProductID#.jpg);'></div><div class='product-name'>#: ProductName #</div>",
+                            width: 300
+                        }, {
+                            field: "CompCode",
+                            title: "CompCode",
+                            //format: "{0:c}",
+                            width: 105
+                        }, {
+                            field: "JobCode",
+                            title: "JobCode",
+                            //template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
+                            width: 130,
+                        }, {
+                            field: "JobName",
+                            title: "JobName",
+                            //editor: clientCategoryEditor,
+                            //groupHeaderTemplate: "Category: #=data.value#, Total Sales: #=kendo.format('{0:c}', aggregates.TotalSales.sum)#",
+                            width: 125
+                        }, {
+                            field: "CustomerRating",
+                            title: "Rating",
+                            //template: "<input id='rating_#=ProductID#' data-bind='value: CustomerRating' class='rating'/>",
+                            //editable: returnFalse,
+                            width: 140
+                        }, {
+                            field: "EmpFirstName",
+                            title: "EmpFirstName",
+                            //template: "<div class='k-text-center'><img src='../content/web/country-flags/#:data.Country.CountryNameShort#.png' alt='#: data.Country.CountryNameLong#' title='#: data.Country.CountryNameLong#' width='30' /></div>",
+                            //editor: clientCountryEditor,
+                            width: 120
+                        }, {
+                            field: "EmpLastName",
+                            title: "EmpLastName",
+                            width: 105
+                        }, {
+                            field: "Note",
+                            title: "Note",
+                            //format: "{0:c}",
+                            width: 140
+                        }, {
+                            field: "NoteDate",
+                            title: "NoteDate",
+                            //format: "{0:c}",
+                            //template: "<span id='chart_#= ProductID#' class='sparkline-chart'></span>",
+                            width: 220
+                        }
+                        //    { command: "destroy", title: "&nbsp;", width: 120 }],
+                        });
+            });
+
+            function onDataBound(e) {
+                var grid = this;
+                grid.table.find("tr").each(function () {
+                    var dataItem = grid.dataItem(this);
+                    var themeColor = dataItem.Discontinued ? 'success' : 'error';
+                    var text = dataItem.Discontinued ? 'available' : 'not available';
+
+                    $(this).find(".badgeTemplate").kendoBadge({
+                        themeColor: themeColor,
+                        text: text,
+                    });
+
+                    $(this).find(".rating").kendoRating({
+                        min: 1,
+                        max: 5,
+                        label: false,
+                        selection: "continuous"
+                    });
+
+                    $(this).find(".sparkline-chart").kendoSparkline({
+                        legend: {
+                            visible: false
+                        },
+                        data: [dataItem.TargetSales],
+                        type: "bar",
+                        chartArea: {
+                            margin: 0,
+                            width: 180,
+                            background: "transparent"
+                        },
+                        seriesDefaults: {
+                            labels: {
+                                visible: true,
+                                format: '{0}%',
+                                background: 'none'
+                            }
+                        },
+                        categoryAxis: {
+                            majorGridLines: {
+                                visible: false
+                            },
+                            majorTicks: {
+                                visible: false
+                            }
+                        },
+                        valueAxis: {
+                            type: "numeric",
+                            min: 0,
+                            max: 130,
+                            visible: false,
+                            labels: {
+                                visible: false
+                            },
+                            minorTicks: { visible: false },
+                            majorGridLines: { visible: false }
+                        },
+                        tooltip: {
+                            visible: false
+                        }
+                    });
+
+                    kendo.bind($(this), dataItem);
+                });
+            }
+
+            function returnFalse() {
+                return false;
+            }
+
+            function clientCategoryEditor(container, options) {
+                $('<input required name="Category">')
+                    .appendTo(container)
+                    .kendoDropDownList({
+                        autoBind: false,
+                        dataTextField: "CategoryName",
+                        dataValueField: "CategoryID",
+                        dataSource: {
+                            data: categories
+                        }
+                    });
+            }
+
+            function clientCountryEditor(container, options) {
+                $('<input required name="Country">')
+                    .appendTo(container)
+                    .kendoDropDownList({
+                        dataTextField: "CountryNameLong",
+                        dataValueField: "CountryNameShort",
+                        template: "<div class='dropdown-country-wrap'><img src='../content/web/country-flags/#:CountryNameShort#.png' alt='#: CountryNameLong#' title='#: CountryNameLong#' width='30' /><span>#:CountryNameLong #</span></div>",
+                        dataSource: {
+                            transport: {
+                                read: {
+                                    url: " https://demos.telerik.com/kendo-ui/service/countries",
+                                    dataType: "jsonp"
+                                }
+                            }
+                        },
+                        autoWidth: true
+                    });
+            }
+
+            var categories = [{
+                "CategoryID": 1,
+                "CategoryName": "Beverages"
+            }, {
+                "CategoryID": 2,
+                "CategoryName": "Condiments"
+            }, {
+                "CategoryID": 3,
+                "CategoryName": "Confections"
+            }, {
+                "CategoryID": 4,
+                "CategoryName": "Dairy Products"
+            }, {
+                "CategoryID": 5,
+                "CategoryName": "Grains/Cereals"
+            }, {
+                "CategoryID": 6,
+                "CategoryName": "Meat/Poultry"
+            }, {
+                "CategoryID": 7,
+                "CategoryName": "Produce"
+            }, {
+                "CategoryID": 8,
+                "CategoryName": "Seafood"
+            }];
+        </script>
+
+        <style type="text/css">
+            .customer-photo {
+                display: inline-block;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background-size: 32px 35px;
+                background-position: center center;
+                vertical-align: middle;
+                line-height: 32px;
+                box-shadow: inset 0 0 1px #999, inset 0 0 10px rgba(0,0,0,.2);
+                margin-left: 5px;
+            }
+
+            .customer-name {
+                display: inline-block;
+                vertical-align: middle;
+                line-height: 32px;
+                padding-left: 3px;
+            }
+
+            .k-grid tr .checkbox-align {
+                text-align: center;
+                vertical-align: middle;
+            }
+
+            .product-photo {
+                display: inline-block;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background-size: 32px 35px;
+                background-position: center center;
+                vertical-align: middle;
+                line-height: 32px;
+                box-shadow: inset 0 0 1px #999, inset 0 0 10px rgba(0,0,0,.2);
+                margin-right: 5px;
+            }
+
+            .product-name {
+                display: inline-block;
+                vertical-align: middle;
+                line-height: 32px;
+                padding-left: 3px;
+            }
+
+            .k-rating-container .k-rating-item {
+                padding: 4px 0;
+            }
+
+                .k-rating-container .k-rating-item .k-icon {
+                    font-size: 16px;
+                }
+
+            .dropdown-country-wrap {
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                white-space: nowrap;
+            }
+
+                .dropdown-country-wrap img {
+                    margin-right: 10px;
+                }
+
+            #grid .k-grid-edit-row > td > .k-rating {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .k-grid .k-grid-search {
+                margin-left: auto;
+                margin-right: 0;
+            }
+        </style>
+    </div>
+
+
+
+
+</body>
+</html>
+
+

@@ -1,0 +1,364 @@
+﻿@{
+    ViewData["Title"] = "RP";
+    string page = "Home";
+}
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Resource Planning Tool</h1>
+    @Html.Partial("_NavPartial", page)
+
+    @*<h5>Company</h5>
+    <form action="/Admin/Project/PostCompany" method="post">
+
+
+        @(Html.Kendo().DropDownList()
+              .Name("CompanyLocation")
+              .DataTextField("Text")
+              .DataValueField("Value")
+              .BindTo(new List<SelectListItem>() {
+              new SelectListItem() {
+                  Text = "PCC",
+                  Value = "0100"
+              },
+              new SelectListItem() {
+                  Text = "PCCI",
+                  Value = "0200"
+              },
+              new SelectListItem() {
+                  Text = "PCCO",
+                  Value = "1700"
+              }
+          })
+          .Value("0200")
+
+        )
+
+        <button type="submit">Select</button>
+
+    </form>*@
+
+</div>
+@* GRID *@
+<div id="grid">
+    @(Html.Kendo().Grid<ProjectUser>()
+
+    .Name("Grid")
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Read(read => read.Action("Project_Read", "Project"))
+    .Update(update => update.Action("Project_Update", "Project"))
+    //.Create(create => create.Action("Project_Create", "Project"))
+    .Destroy(destroy => destroy.Action("Project_Destroy", "Project"))
+    .Events(ev => ev.Error("onError"))
+    .PageSize(200)
+    .Model(model =>
+    {
+        model.Id(h => h.EmployeeNumber + h.JobNumber);
+        model.Field(u => u.JobNumber).Editable(false);
+        model.Field(u => u.JobName).Editable(false);
+        model.Field(u => u.JobStatus).Editable(false);
+        model.Field(u => u.Revenue).Editable(false);
+        model.Field(u => u.ClosePercent).Editable(false);
+        model.Field(u => u.GroupLeader).Editable(false);
+        model.Field(u => u.ProjectDirector).Editable(false);
+        model.Field(u => u.Employee).Editable(false);
+        model.Field(u => u.Title).Editable(false);
+        //model.Field(u => u.HasException).Editable(false);
+
+    })
+    )
+    .Columns(columns =>
+    {
+        columns.Bound(c => c.KeyPlayerLink).Title("CMIC")
+        .ClientTemplate(
+        "# if (data.KeyPlayerLink) { #" +
+        "<a href='#=data.KeyPlayerLink#' target='_blank'><i class=\"k-icon k-i-hyperlink-open k-icon-24 colored-icon\"></i></a>" +
+        "# } else { #" +
+        "#=' ' #" +
+        "# } #")
+        .Width(100);
+        columns.Bound(c => c.JobNumber).Title("Job #").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(c => c.JobName).Filterable(ftb => ftb.Multi(true).Search(true)).Width(150);
+        columns.Bound(c => c.JobStatus).Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(c => c.Revenue).Filterable(ftb => ftb.Multi(true).Search(true)).Width(120);
+        columns.Bound(c => c.ClosePercent).Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(c => c.GroupLeader).Filterable(ftb => ftb.Multi(true).Search(true)).Width(150);
+        columns.Bound(c => c.ProjectDirector).Filterable(ftb => ftb.Multi(true).Search(true)).Width(110);
+        columns.Bound(c => c.Employee).Filterable(ftb => ftb.Multi(true).Search(true)).Width(130)
+
+        ;
+
+        columns.Command(command => command.Custom("Details").Click("showDetails")).Width(100).Exportable(false)
+        //.Title("Employee")
+        ;
+        columns.Bound(c => c.Title).Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+
+        columns.Bound(c => c.Commitment).Filterable(ftb => ftb.Multi(true).Search(true))
+        .ClientTemplate(
+        "# if (Commitment < 100) { #" +
+        "<span class='colored-icon'> #=Commitment#</span>" +
+
+        "# } else { #" +
+        "<span style='cursor:pointer'> #=Commitment#</span>" +
+        "# } #"
+        )
+        .Width(180);
+
+        columns.Bound(c => c.JobStart).Filterable(ftb => ftb.Multi(true).Search(true))
+        .ClientTemplate(
+        "# if (HasException == 'Y') { #" +
+        "<span class='btn btn-outline-success'> #=kendo.toString(JobStart, 'MM/dd/yyyy') #</span>" +
+
+        "# } else { #" +
+        "<span class='btn btn-link'> #=kendo.toString(JobStart, 'MM/dd/yyyy') #</span>" +
+        "# } #"
+        )
+        .Width(175);
+
+        columns.Bound(c => c.JobEnd).Filterable(ftb => ftb.Multi(true).Search(true))
+        .ClientTemplate(
+        //"#=kendo.toString(JobEnd, 'MM/dd/yyyy') #"
+        "# if (HasException == 'Y') { #" +
+        "<span class='btn btn-outline-success'> #=kendo.toString(JobEnd, 'MM/dd/yyyy') #</span>" +
+
+        "# } else { #" +
+        "<span class='btn btn-link'> #=kendo.toString(JobEnd, 'MM/dd/yyyy') #</span>" +
+        "# } #"
+        )
+        .Width(175);
+
+    })
+    .ToolBar(toolbar => {
+        toolbar.Search();
+        toolbar.Save();
+        //toolbar.Create();
+    })
+
+    .Editable(editable =>
+    {
+        editable.Mode(GridEditMode.InCell);
+        //editable.DisplayDeleteConfirmation(false);
+    })
+
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable(sortable => sortable
+    .AllowUnsort(true)
+    .SortMode(GridSortMode.MultipleColumn)
+    .ShowIndexes(true))
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    .Scrollable()
+    .Height(800)
+
+    .ToolBar(tools => tools.Excel())
+    .Excel(excel => excel
+    .AllPages(true)
+    .FileName("Resource Planning.xlsx")
+    .Filterable(true)
+    .ProxyURL(Url.Action("Excel_Export_Save", "Grid"))
+    )
+
+    .ToolBar(tools => tools.Pdf())
+    .Pdf(pdf => pdf
+    .AllPages()
+    .AvoidLinks()
+    .PaperSize("A3")
+    .Scale(0.8)
+    .Margin("2cm", "1cm", "1cm", "1cm")
+    .Landscape()
+    .RepeatHeaders()
+    .TemplateId("page-template")
+    .FileName("Resource Planning.pdf")
+    .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+    )
+
+    .Search(search =>
+    {
+        search.Field(f => f.JobNumber);
+        search.Field(f => f.JobName);
+        search.Field(f => f.JobStatus);
+        //search.Field(f => f.Revenue);
+        //search.Field(f => f.ClosePercent);
+        search.Field(f => f.GroupLeader);
+        search.Field(f => f.ProjectDirector);
+        search.Field(f => f.Employee);
+        search.Field(f => f.Title);
+        //search.Field(f => f.JobStart);
+        //search.Field(f => f.JobEnd);
+    })
+    )
+
+
+</div>
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+</script>
+
+
+@(Html.Kendo().Window()
+    .Name("Details")
+    .Title("Employee detail")
+    .Modal(true)
+    .Iframe(true)
+    .Visible(false)
+    //.LoadContentFrom("test", "Home", new { empNumber = "abc", jobNumber = "1902000" })
+    //.LoadContentFrom("Index", "ManageException", new { jobNumber = "1700251" })
+    //.LoadContentFrom("EmployeeDetail", "Project")
+
+    .Draggable()
+    .Resizable()
+    .Width(1400)
+    .Height(800)
+    .Actions(actions => actions.Minimize().Maximize().Close())
+    .Events(ev => ev.Close("onClose"))
+
+)
+@*//in viewDetail BUTTON*@
+@*<script id="template">
+        <div id="details-container">
+        <p>
+                <h2>#= Employee # </h2>
+        </p>
+
+        <br />
+        <br />
+        JobNumber:#= JobNumber #
+        <br />
+        Employee:#= EmployeeNumber #
+
+        </div>
+
+    </script>*@
+<script id="template">
+    <div id="activation-container">
+        <p>
+            <h2>#= Employee # </h2>
+        </p>
+        <iframe src="/Admin/Project/EmployeeDetail?empNumber=#= EmployeeNumber #"
+            frameborder="0" width="100%" height="100%" onload="resizeIframe(this)"
+        />
+    </div>
+</script>
+
+<script>
+    function resizeIframe(obj) {
+        obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+    }
+</script>
+
+<script>
+    //in viewDetail BUTTON
+    var detailsTemplate;
+
+    $(document).ready(function () {
+        detailsTemplate = kendo.template($("#template").html());
+    });
+
+    function showDetails(e) {
+        e.preventDefault();
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var dtl = $("#Details").data("kendoWindow");
+
+        //dtl.refresh({
+        //    url: "/Admin/Home/test",
+        //    data: { empNumber: dataItem.empNumber}
+        //});
+        //dtl.content("/Admin/Home/Test?jobNumber=" + dataItem.JobNumber + "&empNumber=" + dataItem.EmployeeNumber);
+        dtl.content(detailsTemplate(dataItem));
+        dtl.center().open();
+        //$("#Detail").hide();
+    }
+
+    // in cell "employee"
+    function onClose() {
+        //$("#Details").show();
+    }
+
+    $('#grid').on("click", ".emp", function (e) {
+
+        e.preventDefault();
+
+                //var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var dtl = $("#Details").data("kendoWindow");
+        //dtl.content(detailsTemplate);
+
+        dtl.center().open();
+        //$("#Details").hide();
+    });
+
+</script>
+
+@(Html.Kendo().Window()
+    .Name("test")
+    .Title("Employee")
+    //.Modal(true)
+    .Iframe(true)
+    .Visible(false)
+    //.LoadContentFrom("Index", "ManageException", new { @empNumber: "1234", @jobNumber: "1900987" })
+    .LoadContentFrom("test", "Home")
+
+    .Draggable()
+    .Resizable()
+    .Width(1400)
+    .Height(1000)
+    .Actions(actions => actions.Pin().Minimize().Maximize().Close())
+    .Events(ev => ev.Close("onLeonClose"))
+
+)
+@*<span id="undo">Click</span>*@
+
+<div class="responsive-message"></div>
+
+<script>
+    function onLeonClose() {
+        $("#undo").show();
+    }
+
+    $(document).ready(function () {
+        $("#undo").bind("click", function () {
+            $("#test").data("kendoWindow").center().open();
+            $("#undo").hide();
+        });
+    });</script>
+
+<style>
+    .k-icon-24 {
+        font-size: 24px; /* Sets icon size to 24px */
+    }
+
+    .colored-icon {
+        color: #007BFF;
+        cursor:pointer;
+    }
+
+    #grid .k-grid-header .k-header {
+        font-weight: bold;
+        white-space: normal;
+    }
+
+    .btn-outline-success {
+        /*        color: #28a745;
+        border-color: #28a745;*/
+        cursor: pointer;
+    }
+
+    .btn-link {
+        cursor: pointer;
+    }
+
+</style>
+
+
+
+

@@ -1,0 +1,93 @@
+﻿
+<div style="margin-left: 30px;">
+
+<br /><br />
+    @using (Html.BeginForm("NoteCreate", "Note", FormMethod.Post))
+    {
+        <div>Employee:</div>       
+
+        @(Html.Kendo().ComboBox()
+            .Name("empName_Combo")
+            .DataTextField("EmployeeName")
+            .DataValueField("EmpNumber")
+            .Placeholder("Type Employee name")
+            .Filter("contains")
+
+            .MinLength(2)
+            .HtmlAttributes(new { style = "width:80%" })
+            .DataSource(source =>
+            {
+                source.Read(read =>
+                {
+                    read.Action("ServerFiltering_GetEmployees", "Note")
+
+                    ;
+                })
+            .ServerFiltering(true);
+            })
+    )
+
+        <br /><br />
+        <div id="JobName">
+            <div>Job Name:</div>
+
+            @(Html.Kendo().ComboBox()
+                .Name("jobName_Combo")
+                .DataTextField("JobName")
+                .DataValueField("JobNumber")
+                .Placeholder("Type Job name")
+                .Filter("contains")
+
+                .MinLength(2)
+                .HtmlAttributes(new { style = "width:80%" })
+                .DataSource(source =>
+                {
+                    source.Read(read =>
+                    {
+                        read.Action("ServerFiltering_GetJobs", "Note");
+                    })
+                    .ServerFiltering(true);
+                })
+    )
+
+        </div>
+        <br />
+        <div>
+            <div>Note:</div>
+            <div>
+                @*<textarea rows="5" cols="120" name="description">Enter notes here...</textarea>*@
+                @(Html.Kendo().TextArea()
+                    .Name("txtNote")
+                    .Cols(20)
+                    .Rows(5) // Sets the number of rows
+                    .HtmlAttributes(new { style = "width: 80%" })
+                    //.Value("Enter notes here...")
+                    .Resizable("true")
+    )
+            </div>
+            <br />
+            <div style="text-align: right; width:80%;">
+                @*<button class="btn-success" id="save" type="submit">Save</button>*@
+                <input id="close" class="btn-success" type="submit" value="Save" />
+
+            </div>
+        </div>
+
+    }
+
+
+</div>
+
+<br /><br />
+
+<script>
+    $("#close").click(function () {
+        window.parent.$("#Update").data("kendoWindow").close();
+        parent.location.reload()
+    });
+</script>
+
+
+
+
+

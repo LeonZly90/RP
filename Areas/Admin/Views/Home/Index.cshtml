@@ -1,0 +1,686 @@
+﻿
+@{
+    string page = "Chart";
+}
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Staff Planning Tool</h1>
+    @*<nav class="rp-nav">
+            <a class="rp-nav__link active" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions Table</a>
+        </nav>*@
+    @Html.Partial("_NavPartial", page)
+</div>
+<div id="loading-icon">
+    <span>Loading your data</span>
+    <div class="spinner-grow" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+    <div class="spinner-grow" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+    <div class="spinner-grow" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+
+<div id="grid-container">
+    <div id="grid-loading-overlay" class="hidden">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+    <div class="k-content export-app wide hidden-on-narrow content-wrapper">
+
+        <table id="r-table" class="table">
+            <thead>
+                <tr id="table-headers" class="h-row h-sticky">
+                    <th id="CMiC" class="t-nowrap">
+                        <span id="show-hidden-pill" class="badge badge-pill badge-secondary hidden">
+                            <i class="far fa-eye"></i>
+                            <span>Hidden</span>
+                        </span>
+                        <span id="clear-filter-pill" class="badge badge-pill badge-secondary hidden">
+                            <i class="far fa-trash"></i>
+                            <span>Filters</span>
+                        </span>
+                    </th>
+                    <th id="JobNumber" class="t-nowrap">
+                        <label for="job-select">Job Number <i class="far fa-eye-slash" data-col-hide="hide-2"></i></label>
+                        <select id="job-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="JobName" class="h-job t-nowrap">
+                        <label for="job-name-select">Job Name <i class="far fa-eye-slash" data-col-hide="hide-3"></i></label>
+                        <select id="job-name-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="JobStatus" class="t-nowrap">
+                        <label for="status-select">Status <i class="far fa-eye-slash" data-col-hide="hide-4"></i></label>
+                        <select id="status-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="Revenue" class="t-nowrap">Revenue <i class="far fa-eye-slash" data-col-hide="hide-5"></i></th>
+                    <th id="ClosePercent" class="t-nowrap">Close % <i class="far fa-eye-slash" data-col-hide="hide-6"></i></th>
+                    <th id="GroupLeader" class="t-nowrap">
+                        <label for="gl-select">Business Unit Leader <i class="far fa-eye-slash" data-col-hide="hide-7"></i></label>
+                        <select id="gl-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="ProjectDirector" class="t-nowrap">
+                        <label for="pd-select">PD/VP <i class="far fa-eye-slash" data-col-hide="hide-8"></i></label>
+                        <select id="pd-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="Employee" class="t-nowrap">
+                        <label for="employee-select">Employee <i class="far fa-eye-slash" data-col-hide="hide-9"></i></label>
+                        <select id="employee-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="Title" class="t-nowrap">
+                        <label for="title-select">Title <i class="far fa-eye-slash" data-col-hide="hide-10"></i></label>
+                        <select id="title-select" class="form-control" data-live-search="true" multiple data-selected-text-format="count">
+                        </select>
+                    </th>
+                    <th id="JobStart" class="t-nowrap">Job Start</th>
+                    <th id="JobEnd" class="t-nowrap">Job End</th>
+                    @* Month header columns appended here *@
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                @* Data rows appended here *@
+            </tbody>
+        </table>
+
+    </div>
+
+    @* Exception modal. Toggled by each row's date buttons *@
+    <div class="modal fade" id="exceptionModal" tabindex="-1" role="dialog" aria-labelledby="exceptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exceptionModalLabel">Manage Date Exception</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="employee">
+                    </p>
+                    <p id="title">
+                    </p>
+                    <p id="job">
+                    </p>
+                    <form name="exceptionForm">
+                        <input id="employeeNumber" name="employeeNumber" type="hidden" />
+                        <input id="jobNumber" name="jobNumber" type="hidden" />
+                        <input id="empFirstName" name="empFirstName" type="hidden" />
+                        <input id="empLastName" name="empLastName" type="hidden" />
+                        <input id="glFirstName" name="glFirstName" type="hidden" />
+                        <input id="glLastName" name="glLastName" type="hidden" />
+                        @(Html.Kendo().DatePicker()
+                            .Name("exceptionStart")
+                            .Format("yyyy-MM-dd")
+                        )
+                        @(Html.Kendo().DatePicker()
+                            .Name("exceptionEnd")
+                            .Format("yyyy-MM-dd")
+                        )
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button id="exceptionSave" type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Employee detail modal. Toggled by each row's employee button'*@
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="detailModalLabel">Employee Detail</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @* Open Jobs Table*@
+                    <h5>Open Jobs</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Role</th>
+                                <th>Job</th>
+                                <th>Job Name</th>
+                                <th>Market</th>
+                                <th>Project Range Hours (avg)</th>
+                                <th>Last Month Hours (avg)</th>
+                                <th>Last Week Hours (avg)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-table-body">
+                            @* employee detail rows inserted here *@
+                        </tbody>
+                    </table>
+
+                    @* Years Experience Card *@
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Construction Experience</h5>
+                            <p id="con-exp"></p>
+                        </div>
+                    </div>
+
+                    @* Detail list cards*@
+                    <div class="card-deck">
+                        @*Market Experience Card*@
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Market Experience</h5>
+                                <ul id="mex-card-list" class="list-group list-group-flush">
+                                    @* employee market experience inserted here*@
+                                </ul>
+                            </div>
+                        </div>
+
+                        @*Certification Card*@
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Certifications</h5>
+                                <ul id="cert-card-list" class="list-group list-group-flush">
+                                    @* employee certs inserted here*@
+                                </ul>
+                            </div>
+                        </div>
+
+                        @*Education Card*@
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Education</h5>
+                                <ul id="edu-card-list" class="list-group list-group-flush">
+                                    @* employee education inserted here*@
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Kendo datepicker event functions. Cannot be in document.ready
+    //function onDateChange() {
+    //    console.log(this.value())
+    //}
+
+    $(function () {
+        // Calling getResourceData on page load. This makes get request to /Admin/Home/GetResources/ for all resource data
+        getResourceData();
+
+        // Append option tags to select elements
+        function appendSelectOptions(parentElementId, optionsArray) {
+            let parentElement = document.getElementById(parentElementId)
+            optionsArray.forEach(opt => {
+                let optionElement = `<option value='${opt.Value}'>${opt.Text}</option>`
+                parentElement.insertAdjacentHTML('beforeend', optionElement)
+            })
+        }
+
+        // Remove child elements by classname
+        function removeElementsByClass(className) {
+            let elements = document.getElementsByClassName(className)
+            while (elements.length > 0) {
+                elements[0].parentNode.removeChild(elements[0])
+            }
+        }
+
+        // Handle page loading
+        function handlePageLoading(isLoading) {
+            if (isLoading) {
+                $('#loading-icon').show()
+                $('#grid-container').hide()
+            } else {
+                $('#loading-icon').hide()
+                $('#grid-container').show()
+            }
+        }
+
+        // Handle grid loading
+        function handleGridLoading(isLoading) {
+            if (isLoading)
+                $('#grid-loading-overlay').removeClass("hidden")
+            else
+                $('#grid-loading-overlay').addClass("hidden")
+        }
+
+        // NOT USED Route to employee experience page
+        function addEmpDetailEventListener() {
+            const empDetailButtons = document.getElementsByClassName('emp-detail');
+            Array.from(empDetailButtons, (element) => {
+                element.addEventListener('click', (event) => {
+                    const data = event.currentTarget.dataset.empno
+                    const empNo = `?empNo=${data}`
+                    window.location = "/Admin/Home/EmployeeExperience/" + empNo
+                    console.log(data)
+                })
+            })
+        }
+
+        //  Generate main table row html elements
+        function generateTableRow(projectUser) {
+            let dateRe = /T.*/
+            let currencyRe = /(\d)(?=(\d{3})+(?!\d))/g
+            let rowElement =
+                `<tr class='grid-row'
+                    id='${projectUser.EmployeeNumber}-${projectUser.JobNumber}'
+                    data-months-booked='${projectUser.MonthsBooked}'
+                    data-job-status='${projectUser.JobStatus}'>
+                    <td class='t-nowrap' style='text-align:center;'>
+                        <a href='${projectUser.KeyPlayerLink}' rel='noopener noreferrer nofollow' target='_blank' data-toggle='tooltip' data-placement="top" title='Link to CMiC'>
+                            <i class='far fa-external-link-alt'></i>
+                        </a>
+                    </td>
+                    <td class='t-nowrap'>${projectUser.JobNumber}</td>
+                    <td class='t-nowrap'>${projectUser.JobName}</td>
+                    <td class='t-nowrap'>${projectUser.JobStatus}</td>
+                    <td class='t-nowrap'>${projectUser.Revenue.toString().replace(currencyRe, "$1,")}</td>
+                    <td class='t-nowrap'>${projectUser.ClosePercent}</td>
+                    <td class='t-nowrap'>${projectUser.GroupLeader}</td>
+                    <td class='t-nowrap'>${projectUser.ProjectDirector}</td>
+                    <td class='t-nowrap'>
+                        <button class='emp-detail btn btn-link' type='button' data-toggle="modal" data-target='#detailModal' data-empno='${projectUser.EmployeeNumber}'>
+                            ${projectUser.Employee}
+                        </button>
+                        @*<button class='emp-detail btn btn-link' type='button' data-empno='${projectUser.EmployeeNumber}'>
+                            ${projectUser.Employee}
+                        </button>*@
+                    </td>
+                    <td class='t-nowrap'>${projectUser.Title}</td>
+                    <td class='t-nowrap'>${projectUser.Commitment}</td>
+                    <td class='t-nowrap '>
+                        <button class='manage-exception btn btn-sm ${projectUser.HasException === 'Y' ? 'btn-outline-success' : 'btn-link'}' type='button'  data-pu='${JSON.stringify(projectUser).replace(/[\']/g, "&apos;")}'>
+                            <i class='far fa-calendar-edit'></i> ${projectUser.JobStart.toString().replace(dateRe, "")}
+                        </button>
+                    </td>
+                    <td class='t-nowrap'>
+                        <button class='manage-exception btn btn-sm ${projectUser.HasException === 'Y' ? 'btn-outline-success' : 'btn-link'}' type='button' data-pu='${JSON.stringify(projectUser).replace(/[\/\(\)\']/g, "&apos;")}'>
+                            <i class='far fa-calendar-edit'></i> ${projectUser.JobEnd.toString().replace(dateRe, "")}
+                        </button>
+                    </td>
+                </tr>`
+
+            return rowElement;
+        }
+
+        // Generate employee detail table row html elements
+        function generateDetailRow(empJobHour) {
+            // Creating <a> element if ResuleLink isnt falsey, else <span>
+            let empElement = empJobHour.ResumeLink
+                ? ` <a href='${empJobHour.ResumeLink ? empJobHour.ResumeLink : ""}' rel='noopener noreferrer nofollow' target='_blank' data-toggle='tooltip' data-placement='top' title='Link to Resume'>
+                        ${empJobHour.Employee}
+                    </a>`
+                : `<span>${empJobHour.Employee}</span>`
+            // Creating row element
+            let rowElement = `
+                <tr>
+                    <td>${empElement}</td>
+                    <td>${empJobHour.RoleName}</td>
+                    <td>${empJobHour.JobNumber}</td>
+                    <td>${empJobHour.JobName}</td>
+                    <td>${empJobHour.MarketSector}</td>
+                    <td>${empJobHour.AvgProjectRangeHours}</td>
+                    <td>${empJobHour.AvgLastMonthHours}</td>
+                    <td>${empJobHour.AvgLastWeekHours}</td>
+                </tr>`
+            return rowElement
+        }
+
+        // Generate employee market experience item
+        function generateMarketExperienceItem(empMarketExperience) {
+            let mexElement = `<li class='list-group-item'>${empMarketExperience}</li>`
+            return mexElement
+        }
+
+        function generateCertItem(empCert, status) {
+            let certElement = `<li class='list-group-item'>${empCert}: ${status ? 'Certified' : 'Not Certified' }</li>`
+            return certElement
+        }
+
+        function generateEduItem(empDegree, empMajor) {
+            let eduElement = `<li class='list-group-item'>${empDegree ? empDegree : ""} ${empMajor ? empMajor : ""}</li>`
+            return eduElement
+        }
+
+        function generateConExperienceText(empPepperExp, empConExp) {
+            let text = "";
+            if (empPepperExp)
+                text += `Years with Pepper: <strong>${empPepperExp}</strong>. `;
+            if (empConExp)
+                text += `Years in industry: <strong>${empConExp}</strong>.`;
+            return text;
+        }
+
+        // Append month header columns
+        function appendMonthHeaders(gridMonths) {
+            removeElementsByClass(gridMonths, 'month-header')
+            gridMonths.forEach(gm => {
+                let monthHeader = `<th class='month-header'>${gm}</th>`
+                $('#table-headers').append(monthHeader)
+            })
+        }
+
+        // Append table rows foreach project user record
+        function appendTableRows(projectUsers) {
+            $("#table-body").empty()
+            projectUsers.forEach(pu => {
+                let row = generateTableRow(pu)
+                $("#table-body").append(row)
+            })
+        }
+
+        // Filter handler that takes a filter object {"filterName":"filterValue"} as an arg and gets new data
+        function handleFilterColumns(filters) {
+            $.post('/Admin/Home/GetResources/', filters)
+                .then(handleGridLoading(true))
+                .done(function (data) {
+                    // 1. append filtered project user rows
+                    appendTableRows(data.ProjectUserList)
+                    // 2. generate schedule grid for each resource
+                    generateResourceGrid(data.NumberOfMonths)
+                    $('[data-toggle="tooltip"]').tooltip()
+                    handleGridLoading(false)
+                })
+        }
+
+        // Get data from controller and append to DOM
+        function getResourceData(firstPageLoad = true, filters, callerId) {
+            $.post('/Admin/Home/GetResources/', filters)
+                .then(firstPageLoad ? handlePageLoading(true) : handleGridLoading(true))
+                .done(function (data) {
+                    // 1. append select list options and add selectpicker functionality
+                    if (firstPageLoad) {
+                        appendSelectOptions('gl-select', data.GroupLeaderList)
+                        appendSelectOptions('pd-select', data.ProjectDirectorList)
+                        appendSelectOptions('employee-select', data.EmployeeList)
+                        appendSelectOptions('job-select', data.JobList)
+                        appendSelectOptions('job-name-select', data.JobNameList)
+                        appendSelectOptions('status-select', data.JobStatusList)
+                        appendSelectOptions('title-select', data.TitleList)
+                        $('select').selectpicker();
+                        // 2. append month headers
+                        appendMonthHeaders(data.GridMonths)
+                    }
+                    // 3. append rows for each project user
+                    appendTableRows(data.ProjectUserList)
+                    // 4. generate schedule grid for each resource
+                    generateResourceGrid(data.NumberOfMonths)
+                    // 5. add bootstrap tooltip
+                    $('[data-toggle="tooltip"]').tooltip()
+                    // 6. stop loading indicator & redirect to element that called update if exists
+                    firstPageLoad ? handlePageLoading(false) : handleGridLoading(false);
+                    if (callerId) {
+                        document.getElementById(callerId).scrollIntoView()
+                    }
+                })
+        }
+
+        // Filter columns
+        // Changed event to account for new bootstrap-select
+        $("#table-headers th select").on('changed.bs.select', debounceFunc(function(e, clickedIndex, isSelected, previousValue) {
+            let filters = {}
+            let clearFilterButton = document.getElementById("clear-filter-pill")
+
+            // Multiple select update!
+            // populating filter object that will be passed into controller as 'ResourceFilter' model
+            $("#table-headers th select").map(function (idx, element) {
+                filters[element.closest("th").id] = $(element).val();
+            });
+
+            // branch to show / hide the 'Clear filters' button
+            if (Object.values(filters).every(v => v.length === 0)) clearFilterButton.classList.add('hidden')
+            else clearFilterButton.classList.remove('hidden')
+
+             handleFilterColumns(filters)
+        }, 1000)) // debouncing the callback function call by 1000ms to avoid excessive re-renders
+
+        // Clear filters
+        $("#clear-filter-pill").click(function (e) {
+            let filters = {}
+            $("#table-headers th select").map(function (idx, element) {
+                $(element).selectpicker("val", []);
+            });
+            $(this).addClass('hidden')
+            handleFilterColumns(filters)
+        })
+
+        // Hide column
+        $("th i.far.fa-eye-slash").click(function (e) {
+            let showHiddenButton = document.getElementById("show-hidden-pill")
+            let hideClass = e.target.dataset.colHide
+
+            $("#r-table").addClass(hideClass)
+            showHiddenButton.classList.remove('hidden')
+        })
+
+        // Show hidden
+        $("#show-hidden-pill").click(function (e) {
+            $("#r-table").attr('class', 'table')
+            $(this).addClass('hidden')
+        })
+
+        // Populate exception modal with project user data
+        $('#exceptionModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget) // Button that triggered the modal
+            const modal = $(this)
+            const data = button.data('pu')
+            const dateRe = /T.*/
+
+            // Populate <p> tags
+            modal.find('#employee').html(`Employee: <strong>${data.Employee}</strong>`)
+            modal.find('#title').html(`Title: <strong>${data.Title}</strong>`)
+            modal.find('#job').html(`Job: <strong>${data.JobNumber}</strong>`)
+
+            // Populate <input>s
+            modal.find("#jobNumber").val(data.JobNumber)
+            modal.find("#employeeNumber").val(data.EmployeeNumber)
+            modal.find("#empFirstName").val(data.EmpFirstName)
+            modal.find("#empLastName").val(data.EmpLastName)
+            modal.find("#glFirstName").val(data.GLFirstName)
+            modal.find("#glLastName").val(data.GLLastName)
+            modal.find('#exceptionStart').val(data.JobStart.toString().replace(dateRe, ""))
+            modal.find('#exceptionEnd').val(data.JobEnd.toString().replace(dateRe, ""))
+
+            // Disable save button if !EmployeeNumber
+            if (!data.EmployeeNumber)
+                modal.find('#exceptionSave').prop('disabled', true)
+            else
+                modal.find('#exceptionSave').prop('disabled', false)
+        })
+
+        // Populate detail modal with employee data from $.get response
+        $('#detailModal').on('show.bs.modal', function (event) {
+            const loadingElement =
+                `<div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>`;
+            const button = $(event.relatedTarget) // Button that triggered the modal
+            const empNo = button.data('empno') ? button.data('empno').toString() : ""
+
+            const modal = $(this)
+            const tableBody = modal.find("#detail-table-body")
+            const mexCardList = modal.find("#mex-card-list")
+            const certCardList = modal.find("#cert-card-list")
+            const eduCardList = modal.find("#edu-card-list")
+            const expCardText = modal.find("#con-exp")
+
+            // clearing dynamic elements
+            tableBody.empty();
+            mexCardList.empty();
+            certCardList.empty();
+            eduCardList.empty();
+            expCardText.empty();
+
+            // appending loading spinner
+            tableBody.append(loadingElement)
+            mexCardList.append(loadingElement)
+            certCardList.append(loadingElement)
+            eduCardList.append(loadingElement)
+
+            // getting data to append to detail modal table
+            $.get('/Admin/Home/GetEmpDetail/', { "empNo": empNo })
+                .done(function (data) {
+                    tableBody.empty();
+                    data.forEach(d => {
+                        let detailRow = generateDetailRow(d)
+                        tableBody.append(detailRow)
+                    })
+                })
+            // getting data to append to market experience card
+            $.get('/Admin/Home/GetEmpMarketExperience/', { "empNo": empNo })
+                // sorting by market experience num
+                .done(function (data) {
+                    mexCardList.empty();
+                    const digitRegex = /\(([0-5])\)/
+                    data.sort((a, b) => {
+                        let aNum = parseInt(a.MarketExperience.match(digitRegex)[1])
+                        let bNum = parseInt(b.MarketExperience.match(digitRegex)[1])
+
+                        if (aNum > bNum) {
+                            return -1;
+                        }
+                        if (aNum < bNum) {
+                            return 1;
+                        }
+                        return 0;
+                    })
+
+                    data.forEach(d => {
+                        let mex = d.MarketExperience
+                        if (mex && mex !== " ") {
+                            let mexItem = generateMarketExperienceItem(mex)
+                            mexCardList.append(mexItem)
+                        }
+                    })
+                })
+
+            // getting data to append to certification card
+            $.get('/Admin/Home/GetEmpCertification/', { "empNo": empNo })
+                .done(function (data) {
+                    certCardList.empty();
+                    data.forEach(d => {
+                        let cert = d.CerType;
+                        let status = d.Certified === "Yes";
+
+                        if (cert && cert !== "") {
+                            let certItem = generateCertItem(cert, status)
+                            certCardList.append(certItem);
+                        }
+                    })
+                })
+
+            // getting education data to append to education card
+            $.get('/Admin/Home/GetEmpEducation/', { "empNo": empNo })
+                .done(function (data) {
+                    eduCardList.empty();
+                    data.forEach(d => {
+                        let deg = d.EducationDegree
+                        let maj = d.EducationMajor
+                        if (deg || maj) {
+                            let eduItem = generateEduItem(deg, maj)
+                            eduCardList.append(eduItem)
+                        }
+                    })
+                })
+
+            // getting experience data to append to experience card
+            $.get('/Admin/Home/GetEmpExperience/', { "empNo": empNo })
+                .done(function (data) {
+                    data.forEach(d => {
+                        let pExp = d.TimeWithPepper.split(".")[0]
+                        let cExp = d.TimeInIndustry.split(".")[0]
+                        if (pExp || cExp) {
+                            let expText = generateConExperienceText(pExp, cExp)
+                            expCardText.append(expText)
+                        }
+                    })
+                })
+        })
+
+        // Exception modal save button click handler
+        $('#exceptionSave').click(function (e) {
+            const exceptionObj = {}
+            const formData = document.forms.exceptionForm;
+            [...formData].forEach(d => {
+                exceptionObj[d.name] = d.value
+            })
+
+            // getting filters to pass to getResourceData
+            let filters = {}
+            let filterElements = document.querySelectorAll("#table-headers th select");
+
+            // creating filter object that will be passed into controller as 'ResourceFilter' model
+            [...filterElements].forEach(e => {
+                filters[e.parentElement.id] = e.value
+            });
+
+            // Posting exception data, hiding modal, and reloading table data
+            $.post('/Admin/Home/SaveException/', exceptionObj)
+                .done(function (data) {
+                    $('#exceptionModal').modal('hide')
+                    toastr.success(data)
+                    getResourceData(false, filters, `${exceptionObj.employeeNumber}-${exceptionObj.jobNumber}`)
+                })
+        })
+
+
+        // Export PDF
+        $(".export-pdf").click(function () {
+
+            toastr.success("Converting to PDF. Please Wait ...");
+            
+            // Convert the DOM element to a drawing using kendo.drawing.drawDOM
+            // 
+            kendo.drawing.drawDOM($(".content-wrapper"))
+                .then(function (group) {
+                    
+                    //alert("123");
+                    // Render the result as a PDF file
+                    return kendo.drawing.exportPDF(group, {
+                        paperSize: "auto",
+                        margin: { left: "1cm", top: "1cm", right: "1cm", bottom: "1cm" }
+                    });
+                })
+                .done(function (data) {
+                    //alert("OK");
+                    // Save the PDF file
+                    kendo.saveAs({
+                        dataURI: data,
+                        fileName: "staff-Planning-Tool.pdf",
+                        proxyURL: "@Url.Action("Pdf_Export_Save")",
+                        forceProxy: true,
+                        proxyTarget: "_blank"
+                    });
+
+                    toastr.success("staff-Planning-Tool.pdf has been successfully downloaded to your folder.");
+                });
+        });
+
+    })
+
+
+    //$(document).ready(function () {
+    //});
+
+</script>
+

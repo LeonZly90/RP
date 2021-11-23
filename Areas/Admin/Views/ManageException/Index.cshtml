@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Manage Exception Start/End Date";
+    string page = "ManageException";
+}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Resource Planning Tool</h1>
+    @*<nav class="rp-nav">
+        <a class="rp-nav__link" href="/">Main Table</a>
+        <a class="rp-nav__link active" href="/Admin/ManageException">Exceptions Table</a>
+    </nav>*@
+    @Html.Partial("_NavPartial", page)
+</div>
+@* GRID *@
+<div>
+    @(Html.Kendo().Grid<PepperResourceException>()
+    .Name("PrException")
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Read(read => read.Action("PR_Exception_Read", "ManageException"))
+    .Update(update => update.Action("PR_Exception_Update", "ManageException"))
+    .Destroy(destroy => destroy.Action("PR_Exception_Delete", "ManageException"))
+    .Events(ev => ev.Error("onError"))
+    .PageSize(200)
+    .Model(model =>
+    {
+        model.Id(h => h.EmployeeNumber + h.JobNumber);
+        model.Field(h => h.EmployeeNumber).Editable(false);
+        model.Field(h => h.JobNumber).Editable(false);
+        model.Field(h => h.ExceptionStart).Editable(true);
+        model.Field(h => h.ExceptionEnd).Editable(true);
+        model.Field(h => h.EmpFirstName).Editable(false);
+        model.Field(h => h.EmpLastName).Editable(false);
+        model.Field(h => h.GL_FirstName).Editable(false);
+        model.Field(h => h.GL_LastName).Editable(false);
+        model.Field(h => h.Employee).Editable(false);
+        model.Field(h => h.GL_Name).Editable(false);
+
+    })
+    )
+    .Columns(columns =>
+    {
+        columns.Command(command => { command.Destroy().Template("<button type=\"button\" class=\"k-button k-button-icontext k-grid-delete\"><span class=\"k-icon k-i-trash\"></span></button>"); }).Title("Del").Width(80).Locked(true);
+        columns.Bound(h => h.Employee).Title("Name").Width(200);
+        columns.Bound(h => h.GL_Name).Title("GroupLeader").Width(200);
+        columns.Bound(h => h.JobNumber).Width(150);
+        columns.Bound(h => h.ExceptionStart).Title("ExceptionStart")
+        .ClientTemplate(
+            "#=kendo.toString(ExceptionStart, 'MM/dd/yyyy') #"
+         )
+        .Width(200)
+        ;
+        columns.Bound(h => h.ExceptionEnd).Title("ExceptionEnd")
+        .ClientTemplate(
+            "#=kendo.toString(ExceptionEnd, 'MM/dd/yyyy') #"
+         )
+        .Width(200)
+        ;
+
+    })
+    .ToolBar(toolbar =>
+    {
+        toolbar.Save();
+    })
+    .Editable(editable => editable.Mode(GridEditMode.InCell))
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable()
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    .Scrollable()
+    .ToolBar(t => t.Search())
+    .Height(800)
+    .Search(search =>
+    {
+        search.Field(f => f.Employee);
+        search.Field(f => f.GL_Name);
+        search.Field(f => f.JobNumber);
+
+    })
+
+    .HtmlAttributes(new {@class = "materials-grid"})
+    )
+
+</div>
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+
+</script>

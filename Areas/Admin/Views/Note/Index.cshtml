@@ -1,0 +1,247 @@
+﻿@{
+    ViewData["Title"] = "Note";
+    string page = "Note";
+}
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div class="app-title">
+    <img src="~/img/Pepper_TT_3.png" />
+    <h1>Resource Planning Tool</h1>
+    @Html.Partial("_NavPartial", page)
+</div>
+@* GRID *@
+<div id="grid">
+    @(Html.Kendo().Grid<ProjectNoteVM>()
+
+    .Name("Grid")
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Read(read => read.Action("Note_Read", "Note"))
+    //.Update(update => update.Action("Note_Update", "Note"))
+    //.Create(create => create.Action("Note_Create", "Note"))
+    .Destroy(destroy => destroy.Action("Note_Destroy", "Note"))//.Data("jsFunction")
+    .Events(ev => ev.Error("onError"))
+    .PageSize(100)
+    .Model(model =>
+    {
+        model.Id(h => h.Id);
+        model.Field(u => u.EmpNo).Editable(false);
+        model.Field(u => u.CompCode);
+        model.Field(u => u.JobCode);
+        model.Field(u => u.JobName).Editable(false);
+        model.Field(u => u.EmpFirstName).Editable(false);
+        model.Field(u => u.EmpLastName);
+        model.Field(u => u.Note).Editable(false);
+        model.Field(u => u.NoteDate);
+    })
+    )
+    .Columns(columns =>
+    {
+        //columns.Bound(c => c.Id).Title("ID").Width(50).ClientTemplate("#= Id #"); //.Visible(false)
+        columns.Bound(c => c.JobName).Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(c => c.EmpName).Filterable(ftb => ftb.Multi(true).Search(true)).Title("Employee Name").Width(100);
+        columns.Bound(c => c.Note).Filterable(ftb => ftb.Multi(true).Search(true)).Width(200);
+        //columns.Command(command => command.Custom("Update").Click("showDetails").Text("<span class='k-icon k-i-track-changes-enable'></span>")).Width(50);
+        //columns.Command(command => { command.Destroy().Template("<button type=\"button\" class=\"k-button k-button-icontext k-grid-delete\"><span class=\"k-icon k-i-trash\"></span></button>"); }).Width(50);
+
+        columns.Command(command =>
+        {
+            command.Custom("Update").Click("showDetails").Text("<span class='k-icon k-i-track-changes-enable'></span>");
+            command.Destroy().Template("<button type=\"button\" class=\"k-button k-button-icontext k-grid-delete\"><span class=\"k-icon k-i-trash\"></span></button>");
+        }).Width(60).Exportable(false);
+    })
+
+    .ToolBar(toolbar => {
+        toolbar.Search();
+        toolbar.Custom().Text("Create Note").HtmlAttributes(new { id = "customButton", @class = "floatRight" });
+    })
+
+    .Editable(editable =>
+    {
+        editable.Mode(GridEditMode.InLine);
+
+    })
+
+    .Search(search =>
+    {
+        search.Field(f => f.EmpNo);
+        search.Field(f => f.CompCode);
+        search.Field(f => f.JobCode);
+        search.Field(f => f.EmpFirstName);
+        search.Field(f => f.EmpLastName);
+        search.Field(f => f.Note);
+    })
+
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable(sortable => sortable
+    .AllowUnsort(true)
+    .SortMode(GridSortMode.MultipleColumn)
+    .ShowIndexes(true))
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    .Scrollable()
+    .Height(800)
+
+    .ToolBar(tools => tools.Excel())
+    .Excel(excel => excel
+    .AllPages(true)
+    .FileName("Note.xlsx")
+    .Filterable(true)
+    .ProxyURL(Url.Action("Excel_Export_Save", "Grid"))
+    )
+
+    .ToolBar(tools => tools.Pdf())
+    .Pdf(pdf => pdf
+    .AllPages()
+    .AvoidLinks()
+    .PaperSize("A3")
+    .Scale(0.8)
+    .Margin("2cm", "1cm", "1cm", "1cm")
+    .Landscape()
+    .RepeatHeaders()
+    .TemplateId("page-template")
+    .FileName("Note.pdf")
+    .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+    )
+    )
+</div>
+
+@*in update BUTTON*@
+@(Html.Kendo().Window()
+    .Name("Update")
+    .Title("Note")
+    .Modal(true)
+    .Iframe(true)
+    .Visible(false)
+    .Draggable()
+    .Resizable()
+    .Width(1000)
+    .Height(600)
+    .Actions(actions => actions.Minimize().Maximize().Close())
+    //.LoadContentFrom("NoteUpdate", "Note", new { EmpNumber = "abc", JobNumber = "1902000" })
+    //.Events(ev => ev.Close("onClose"))
+)
+@*in update BUTTON*@
+<script id="template">
+    <div id="activation-container">
+        <p>
+            <div><strong>Employee Name:</strong></div>
+            <div>#= EmpName # </div>
+        </p>
+        <p>
+            <div><strong>Job Name:</strong></div>
+            <div>#= JobName # </div>
+        </p>
+
+        <iframe
+            src="/Admin/Note/NoteUpdate?NoteId=#= Id #"
+            frameborder="0" width="100%" height="600px" onload="resizeIframe(this)">
+        </iframe>
+
+    </div>
+</script>
+
+<script>
+    function resizeIframe(obj) {
+        obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+    }
+</script>
+
+<script>
+    //in update BUTTON
+    var detailsTemplate;
+    $(document).ready(function () {
+        detailsTemplate = kendo.template($("#template").html());
+    });
+
+    function showDetails(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var dtl = $("#Update").data("kendoWindow");
+        dtl.content(detailsTemplate(dataItem));
+        dtl.center().open();
+    }
+
+    //function onClose() {
+    //    //window.location.reload();
+    //}
+
+</script>
+
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+</script>
+
+
+@*create new note*@
+@(Html.Kendo().Window()
+    .Name("new")
+    .Title("New Note")
+    .Modal(true)
+    .Iframe(true)
+    .Visible(false)
+    //.LoadContentFrom("Index", "ManageException", new { @empNumber: "1234", @jobNumber: "1900987" })
+    .LoadContentFrom("NoteCreate", "Note")
+    .Draggable()
+    .Resizable()
+    .Width(1000)
+    .Height(600)
+    .Actions(actions => actions.Minimize().Maximize().Close())
+    //.Events(ev => ev.Close("onLeonClose"))
+)
+
+<script id="newNote">
+    <div id="activation-container">
+        <p>
+            <h4>hahahaha</h4>
+        </p>
+        <iframe
+            src="/Admin/Note/NoteCreate"
+            frameborder="0" width="100%" height="600px" onload="resizeIframeNew(this)">
+        </iframe>
+    </div>
+</script>
+
+<script>
+    function resizeIframeNew(obj) {
+        obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+    }
+</script>
+
+<script>
+    var NewNoteTemplate;
+    $(document).ready(function () {
+        NewNoteTemplate = kendo.template($("#newNote").html());
+    });
+
+    $("#grid").on("click", "#customButton", function (k) {
+        k.preventDefault();
+        //var dataItemNew = this.dataItem($(k.currentTarget).closest("tr"));
+        var NewNote = $("#new").data("kendoWindow");
+        //NewNote.content(NewNoteTemplate(dataItemNew));
+        NewNote.center().open();
+    });
+
+    //function onLeonClose() {
+    //    //$("#customButton").show();
+    //    //window.location.reload();
+    //};
+</script>
+
+
+
+<style>
+
+    #grid .k-grid-header .k-header {
+        font-weight: bold;
+        white-space: normal;
+    }
+</style>

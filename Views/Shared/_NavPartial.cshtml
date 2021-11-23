@@ -1,0 +1,135 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject RPSignInManager SignInManager
+@inject UserManager<RPUser> UserManager
+@using ResourcePlanning.Utility
+@using Kendo.Mvc.UI
+
+<nav class="rp-nav">
+
+
+    @if (User.IsInRole(SD.Role_Admin))
+    {
+        @*<a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>*@
+
+        @if (Model == "Home")
+        {
+            <a class="rp-nav__link active" href="/Admin/Project">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>
+
+        }
+        else if (Model == "ManageException")
+        {
+            <a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link active" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>
+
+
+        }
+        else if (Model == "User")
+        {
+            <a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link active" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>
+
+
+        }
+        else if (Model == "Chart")
+        {
+            <a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link active" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>
+
+        }
+
+        else if (Model == "EmpAvailable")
+        {
+            <a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link active" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link" href="/Admin/Note">Manage Note</a>
+
+        }
+
+        else if (Model == "Note")
+        {
+            <a class="rp-nav__link" href="/">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+            <a class="rp-nav__link" href="/Admin/User">Manage User</a>
+            <a class="rp-nav__link active" href="/Admin/Note">Manage Note</a>
+
+        }
+    }
+    else
+    {
+        @if (Model == "Home")
+        {
+            <a class="rp-nav__link active" href="/Admin/Project">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+
+            @*<a class="rp-nav__link" href="/Admin/User">Users</a>*@
+            @*<a class="rp-nav__link" href="/Admin/Note">Note</a>*@
+
+        }
+        else if (Model == "ManageException")
+        {
+            <a class="rp-nav__link" href="/Admin/Project">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link active" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+
+
+        }
+        else if (Model == "Chart")
+        {
+            <a class="rp-nav__link" href="/Admin/Project">Main Table</a>
+            <a class="rp-nav__link active" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link" href="/Admin/EmpAvailable">Available Employee</a>
+
+        }
+
+        else if (Model == "EmpAvailable")
+        {
+            <a class="rp-nav__link" href="/Admin/Project">Main Table</a>
+            <a class="rp-nav__link" href="/Admin/Home">Project Chart</a>
+            <a class="rp-nav__link" href="/Admin/ManageException">Exceptions</a>
+            <a class="rp-nav__link active" href="/Admin/EmpAvailable">Available Employee</a>
+
+        }
+    }
+
+    <form class="rp-nav__logout" asp-area="Account" asp-controller="Home" asp-action="LogOff">
+        <div class="rp-nav__legend">
+            <span class="sale">SALE</span>
+            <span class="jau">JAU</span>
+            <span class="bid">Bid/RFP</span>
+            <span class="hot">HP</span>
+        </div>
+
+        <button type="submit" class="btn btn-link">Logout</button>
+    </form>
+</nav>

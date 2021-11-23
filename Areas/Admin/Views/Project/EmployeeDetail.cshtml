@@ -1,0 +1,165 @@
+﻿<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+
+<div id="emp_grid">
+    @(Html.Kendo().Grid<EmpJobHour>()
+    .Name("EmployeeDetail")
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Read(read => read.Action("EmployeeDetail_Read", "Project"))
+    //.Update(update => update.Action("PR_Exception_Update", "ManageException"))
+    //.Destroy(destroy => destroy.Action("PR_Exception_Delete", "ManageException"))
+    .Events(ev => ev.Error("onError"))
+    .PageSize(100)
+    .Model(model =>
+    {
+        model.Id(h => h.EmployeeNumber + h.JobNumber);
+        model.Field(h => h.ResumeLink).Editable(false);
+        model.Field(h => h.Employee).Editable(false);
+        model.Field(h => h.RoleName).Editable(false);
+        model.Field(h => h.JobNumber).Editable(false);
+        model.Field(h => h.JobName).Editable(false);
+        model.Field(h => h.MarketSector).Editable(false);
+        model.Field(h => h.AvgProjectRangeHours).Editable(false);
+        model.Field(h => h.AvgLastMonthHours).Editable(false);
+        model.Field(h => h.AvgLastWeekHours).Editable(false);
+    })
+    )
+    .Columns(columns =>
+    {
+        //columns.Command(command => { command.Destroy().Template("<button type=\"button\" class=\"k-button k-button-icontext k-grid-delete\"><span class=\"k-icon k-i-trash\"></span></button>"); }).Title("Del").Width(80).Locked(true);
+        columns.Bound(h => h.ResumeLink).Title("Name")
+        .ClientTemplate(
+        "# if (data.ResumeLink) { #" +
+        "<a style='color:rgb(0,123,255)' href='#=data.ResumeLink#' target='_blank'>#=Employee#</a>" +
+        "# } else { #" +
+        "#=' ' #" +
+        "# } #")
+
+        .Width(100);
+        //columns.Bound(h => h.Employee).Title("Name").Width(100);
+        columns.Bound(h => h.RoleName).Title("Role").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(h => h.JobNumber).Title("Job#").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(h => h.JobName).Title("Job Name").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(h => h.MarketSector).Title("Market").Filterable(ftb => ftb.Multi(true).Search(true)).Width(100);
+        columns.Bound(h => h.AvgProjectRangeHours).Filterable(ftb => ftb.Multi(true).Search(true)).Title("Project Range Hours (avg)").Width(100);
+        columns.Bound(h => h.AvgLastMonthHours).Filterable(ftb => ftb.Multi(true).Search(true)).Title("Last Month Hours (avg)").Width(100);
+        columns.Bound(h => h.AvgLastWeekHours).Filterable(ftb => ftb.Multi(true).Search(true)).Title("Last Week Hours (avg)").Width(100);
+    })
+    //.ToolBar(toolbar =>
+    //{
+    //    toolbar.Save();
+    //})
+    .Editable(editable => editable.Mode(GridEditMode.InCell))
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true).ButtonCount(5))
+    .Sortable(sortable => sortable
+    .AllowUnsort(true)
+    .SortMode(GridSortMode.MultipleColumn)
+    .ShowIndexes(true))
+    .Navigatable()
+    .Resizable(r => r.Columns(true))
+    .Reorderable(r => r.Columns(true))
+    .Groupable(g => g.ShowFooter(false))
+    .ColumnMenu()
+    .Filterable()
+    //.Scrollable()
+    .ToolBar(t => t.Search())
+    //.Height(1000)
+
+    .ToolBar(tools => tools.Excel())
+    .Excel(excel => excel
+    .AllPages(true)
+    .FileName("Employee Detail.xlsx")
+    .Filterable(true)
+    .ProxyURL(Url.Action("Excel_Export_Save", "Grid"))
+    )
+
+    .ToolBar(tools => tools.Pdf())
+    .Pdf(pdf => pdf
+    .AllPages()
+    .AvoidLinks()
+    .PaperSize("A3")
+    .Scale(0.8)
+    .Margin("2cm", "1cm", "1cm", "1cm")
+    .Landscape()
+    .RepeatHeaders()
+    .TemplateId("page-template")
+    .FileName("Employee Detail.pdf")
+    .ProxyURL(Url.Action("Pdf_Export_Save", "Grid"))
+    )
+
+    .Search(search =>
+    {
+        //search.Field(f => f.Employee);
+        search.Field(f => f.RoleName);
+        search.Field(f => f.JobNumber);
+        search.Field(f => f.JobName);
+        search.Field(f => f.MarketSector);
+    })
+
+    .HtmlAttributes(new {@class = "materials-grid"})
+    )
+
+</div>
+<br /><br />
+@* Years Experience Card *@
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Construction Experience</h5>
+        <p id="con-exp">@Html.Raw(ViewData["_EmpConstructionExp"])</p>
+    </div>
+</div>
+
+@* Detail list cards*@
+<div class="card-deck">
+    @*Market Experience Card*@
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Market Experience</h5>
+            <ul id="mex-card-list" class="list-group list-group-flush">
+                @* employee market experience inserted here*@
+                @*<li class='list-group-item'>Higher Education - (5) Expert</li>
+        <li class='list-group-item'>Interior - (5) Expert</li>
+        <li class='list-group-item'>Retail - (5) Expert</li>*@
+                @Html.Raw(ViewData["_EmpMarketExp"])
+            </ul>
+        </div>
+    </div>
+
+    @*Certification Card*@
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Certifications</h5>
+            <ul id="cert-card-list" class="list-group list-group-flush">
+                @* employee certs inserted here*@
+                @Html.Raw(@ViewData["_EmpCertification"])
+            </ul>
+        </div>
+    </div>
+
+
+            @*Education Card*@
+    <div class="card">
+        <div class="card-body">
+        <h5 class="card-title">Education</h5>
+        <ul id="edu-card-list" class="list-group list-group-flush">
+            @* employee education inserted here*@
+            @Html.Raw(@ViewData["_EmpEducation"])
+        </ul>
+         </div>
+    </div>
+
+</div>
+
+<script>
+    function onError(e) {
+        console.log(e.status);
+    }
+
+</script>
+
+<style>
+    #emp_grid .k-grid-header .k-header {
+        font-weight: bold;
+        white-space: normal;
+    }
+</style>

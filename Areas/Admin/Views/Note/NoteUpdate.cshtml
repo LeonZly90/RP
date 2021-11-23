@@ -1,0 +1,39 @@
+﻿@model ResourcePlanning.Models.ProjectNoteVM
+
+    <div>
+        <form action="/Admin/Note/NoteUpdate" method="post">
+
+
+            <p>
+                <div><strong>Note:</strong></div>
+                @*<textarea rows="8" cols="80" name="Note">@Model.Note</textarea>*@
+                <div>
+                    @(Html.Kendo().TextArea()
+                    .Name("Note")
+                    .Cols(20)
+                    .Rows(5) // Sets the number of rows
+                    .HtmlAttributes(new { style = "width: 90%" })
+                    .Value(@Model.Note)
+                    .Resizable("true")
+    )
+                </div="Note">
+            </p>
+
+            <div>
+                <input id="close" class="btn-success" type="submit" value="Save" />
+            </div>
+
+
+            <input type="hidden" name="NoteId" value="@Model.Id" />
+
+        </form>
+
+    </div>
+<br /><br />
+
+<script>
+    $("#close").click(function () {
+        window.parent.$("#Update").data("kendoWindow").close();
+        parent.location.reload()
+    });
+</script>
