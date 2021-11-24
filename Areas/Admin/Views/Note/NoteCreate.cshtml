@@ -15,16 +15,16 @@
 
             .MinLength(2)
             .HtmlAttributes(new { style = "width:80%" })
-            .DataSource(source =>
-            {
-                source.Read(read =>
-                {
-                    read.Action("ServerFiltering_GetEmployees", "Note")
-
-                    ;
-                })
-            .ServerFiltering(true);
-            })
+            .DataSource(source => source
+            .ServerFiltering(true)
+               .Custom()
+               .Sort(s => s.Add("EmployeeName"))
+               .Transport(tr => tr
+                   .Read(read =>
+                   {
+                       read.Action("ServerFiltering_GetEmployees", "Note");
+                   }
+               )))
     )
 
         <br /><br />
@@ -40,14 +40,25 @@
 
                 .MinLength(2)
                 .HtmlAttributes(new { style = "width:80%" })
-                .DataSource(source =>
-                {
-                    source.Read(read =>
-                    {
-                        read.Action("ServerFiltering_GetJobs", "Note");
-                    })
-                    .ServerFiltering(true);
-                })
+                //.DataSource(source =>
+                //{
+                //    source.Read(read =>
+                //    {
+                //        read.Action("ServerFiltering_GetJobs", "Note");
+                //    })
+                //    .ServerFiltering(true);
+                //})
+                .DataSource(source => source
+                .ServerFiltering(true)
+                .Custom()
+                .Sort(s => s.Add("JobName"))
+                .Transport(tr => tr
+                   .Read(read =>
+                   {
+                       read.Action("ServerFiltering_GetJobs", "Note");
+                   }
+                )))
+
     )
 
         </div>

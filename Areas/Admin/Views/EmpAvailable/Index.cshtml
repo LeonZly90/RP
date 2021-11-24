@@ -14,10 +14,10 @@
 @* GRID *@
 <div id="grid">
     @(Html.Kendo().Grid<EmpAvailable>()
-
     .Name("Grid")
     .DataSource(dataSource => dataSource
     .Ajax()
+    .ServerOperation(false) //Leon
     .Read(read => read.Action("empAvlList_Read", "EmpAvailable"))
     //.Update(update => update.Action("Project_Update", "EmpAvailable"))
     //.Create(create => create.Action("Project_Create", "EmpAvailable"))
@@ -74,7 +74,7 @@
     .Filterable(true)
     .ProxyURL(Url.Action("Excel_Export_Save", "Grid"))
     )
-
+    .Events(ev => ev.ColumnMenuInit("columnMenuInit"))
     .ToolBar(tools => tools.Pdf())
     .Pdf(pdf => pdf
     .AllPages()
@@ -93,6 +93,7 @@
     {
         search.Field(f => f.EmpFullName);
         search.Field(f => f.EmpTitle);
+        search.Field(f => f.EmpDepartment);
     })
     )
 
@@ -102,6 +103,18 @@
     function onError(e) {
         console.log(e.status);
     }
+
+    function columnMenuInit(e) {
+        if (e.field === "EmpFullName" || e.field === "EmpTitle" || e.field === "EmpDepartment") {
+            var filterMultiCheck = e.container.find(".k-filterable").data("kendoFilterMultiCheck")
+            filterMultiCheck.container.empty();
+            filterMultiCheck.checkSource.sort({ field: e.field, dir: "asc" });
+
+            filterMultiCheck.checkSource.data(filterMultiCheck.checkSource.view().toJSON());
+            filterMultiCheck.createCheckBoxes();
+        }
+    };
+
 </script>
 
 

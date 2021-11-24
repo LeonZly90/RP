@@ -14,6 +14,7 @@
             .Name("UserGrid")
             .DataSource(dataSource => dataSource
                 .Ajax()
+                .ServerOperation(false) //Leon
                 .Read(read => read.Action("Users_Read", "User"))
                 .Update(update => update.Action("Users_Update", "User"))
                 .Create(create => create.Action("Users_Create", "User"))
@@ -31,10 +32,10 @@
             )
             .Columns(columns =>
             {
-                columns.Bound(c => c.Email).Title("Email").Width(500);
-                columns.Bound(c => c.FirstName).Title("First Name").Width(200);
-                columns.Bound(c => c.LastName).Width(150);
-                columns.ForeignKey(h => h.RoleId, (IEnumerable)ViewData["roles"], "RoleId", "RoleName").Title("Role");
+                columns.Bound(c => c.Email).Title("Email").Filterable(ftb => ftb.Multi(true).Search(true)).Width(500);
+                columns.Bound(c => c.FirstName).Title("First Name").Filterable(ftb => ftb.Multi(true).Search(true)).Width(200);
+                columns.Bound(c => c.LastName).Filterable(ftb => ftb.Multi(true).Search(true)).Width(150);
+                columns.ForeignKey(h => h.RoleId, (IEnumerable)ViewData["roles"], "RoleId", "RoleName").Title("Role").Filterable(ftb => ftb.Multi(true).Search(true));
                 columns.Command(command => command.Destroy());
 
             })
@@ -58,6 +59,7 @@
     .Filterable()
     .Scrollable()
     .Height(800)
+    .Events(ev => ev.ColumnMenuInit("columnMenuInit"))
     .Search(search =>
     {
         search.Field(f => f.Email);
@@ -72,4 +74,14 @@
     function onError(e) {
         console.log(e.status);
     }
+    function columnMenuInit(e) {
+        if (e.field === "Email" || e.field === "FirstName" || e.field === "LastName" || e.field === "RoleId") {
+            var filterMultiCheck = e.container.find(".k-filterable").data("kendoFilterMultiCheck")
+            filterMultiCheck.container.empty();
+            filterMultiCheck.checkSource.sort({ field: e.field, dir: "asc" });
+
+            filterMultiCheck.checkSource.data(filterMultiCheck.checkSource.view().toJSON());
+            filterMultiCheck.createCheckBoxes();
+        }
+    };
 </script>

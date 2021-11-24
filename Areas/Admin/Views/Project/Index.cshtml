@@ -48,6 +48,7 @@
     .Name("Grid")
     .DataSource(dataSource => dataSource
     .Ajax()
+    .ServerOperation(false) //Leon
     .Read(read => read.Action("Project_Read", "Project"))
     .Update(update => update.Action("Project_Update", "Project"))
     //.Create(create => create.Action("Project_Create", "Project"))
@@ -136,6 +137,7 @@
         toolbar.Save();
         //toolbar.Create();
     })
+    .Events(ev => ev.ColumnMenuInit("columnMenuInit"))
 
     .Editable(editable =>
     {
@@ -202,6 +204,19 @@
     function onError(e) {
         console.log(e.status);
     }
+
+    function columnMenuInit(e) {
+        if (e.field === "JobNumber" || e.field === "JobName" || e.field === "JobStatus" || e.field === "Revenue" || e.field === "ClosePercent" || e.field === "GroupLeader"
+            || e.field === "ProjectDirector" || e.field === "Employee" || e.field === "Title" || e.field === "Commitment" || e.field === "JobStart" || e.field === "JobEnd") {
+            var filterMultiCheck = e.container.find(".k-filterable").data("kendoFilterMultiCheck")
+            filterMultiCheck.container.empty();
+            filterMultiCheck.checkSource.sort({ field: e.field, dir: "asc" });
+
+            filterMultiCheck.checkSource.data(filterMultiCheck.checkSource.view().toJSON());
+            filterMultiCheck.createCheckBoxes();
+        }
+    };
+
 </script>
 
 
@@ -330,7 +345,9 @@
             $("#test").data("kendoWindow").center().open();
             $("#undo").hide();
         });
-    });</script>
+    });
+
+</script>
 
 <style>
     .k-icon-24 {
